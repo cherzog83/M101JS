@@ -1,0 +1,21 @@
+//6.2 Query use test
+db.grades.aggregate([
+    { $unwind: "$scores" },
+    { $match: { "scores.type": { $in: [ "exam", "homework" ] } } },
+    { $project: { _id: 0, "classId": "$class_id", "score": "$scores.score" } },
+    { $group: { _id: "$classId",
+       averageScore: { $avg: "$score" } }
+    },
+    { $sort: { averageScore: -1 }}
+])
+
+//6.3 Query use crunchbase
+db.companies.aggregate([
+    { $match: { "founded_year": 2004 }},
+    { $project: { "name":1, "founded_year":1, "funding_rounds.raised_amount":1, "funding_rounds_size": { $size: "$funding_rounds" }, _id:0 }},
+    { $match: { "funding_rounds_size": { $gte: 5} }},
+    { $unwind: "$funding_rounds" },
+    { $project: { "name":1, "raisedAmount":"$funding_rounds.raised_amount" }},
+    { $group: { _id: "$name", averageRaisedAmount: { $avg: "$raisedAmount" }}},
+    { $sort: { averageRaisedAmount: 1 }}
+]);
